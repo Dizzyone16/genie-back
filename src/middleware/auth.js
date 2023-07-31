@@ -1,17 +1,19 @@
 const jwt = require('jsonwebtoken')
-const configs = require('../config/configs.js')
+const configs = require('../utils/configs.js')
 
 const auth = (req, res, next) => {
   const token = req.header('x-access-token')
+
   if (!token) {
-    return res.status(401).json({ status: 4010, msg: 'No token' })
+    return res.status(401).json({ error: 'No token found.' })
   }
+
   try {
-    const verified = jwt.verify(token, configs.accessTokenSecret)
-    req.user = verified.user
+    const decoded = jwt.verify(token, configs.jwtSecretKey)
+    req.user = decoded.user
     next()
   } catch (err) {
-    res.status(401).json({ status: 4011, msg: 'Invalid Token' })
+    res.status(403).json({ error: 'Invalid token' })
   }
 }
 

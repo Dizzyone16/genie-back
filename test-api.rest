@@ -1,0 +1,7 @@
+###
+POST http://localhost:3001/user/login-or-register
+Content-Type: application/json
+
+{
+    "phoneNumber": "01066342670"
+}
