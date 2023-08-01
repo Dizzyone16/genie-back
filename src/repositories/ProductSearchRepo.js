@@ -1,7 +1,5 @@
-const client = require("../utils/mongodb")
-const { ObjectId } = require("mongodb")
-
-const collection = client.db.collection("product_search")
+const client = require('../utils/mongodb')
+const { ObjectId } = require('mongodb')
 
 const minute = 1000 * 60 * 60
 const hour = 1000 * 60 * 60 * 60
@@ -9,14 +7,16 @@ const day = 1000 * 60 * 60 * 60 * 24
 
 class ProductSearchRepo {
   async registerProductData(data) {
-    const result = await collection.insertOne({
+    const { db } = client
+    await db.collection('product_search').insertOne({
       ...data,
       createdAt: new Date(),
     })
   }
 
   async getProductData(query) {
-    const result = await collection.findOne({
+    const { db } = client
+    const result = await db.collection('product_search').findOne({
       productName: query,
       createdAt: { $gte: new Date() - hour },
       deletedAt: null,

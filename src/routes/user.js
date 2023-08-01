@@ -19,7 +19,7 @@ router.post(
 
 router.post(
   '/search',
-  auth,
+  // auth,
   wrapAsync(async (req, res) => {
     const searchQuery = req.body.query
 
@@ -41,16 +41,16 @@ router.post(
 
 router.post(
   '/catalog',
-  auth,
+  // auth,
   wrapAsync(async (req, res) => {
-    const productNumber = req.body.productNumber
+    const catalogNumber = req.body.catalogNumber
 
-    const catalogData = await SearchService.getCatalogData(productNumber)
+    const result = await SearchService.getCatalogData(catalogNumber)
 
     if (result) {
       return res.json({
         status: 200,
-        data: catalogData,
+        data: result,
         message: 'Catalog search completed successfully.',
       })
     }
