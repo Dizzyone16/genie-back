@@ -54,7 +54,9 @@ httpServer.listen(configs.port, async () => {
 })
 
 app.get('/', (req, res) => {
-  res.send('Hello, world!')
+  return res.json({
+    message: 'Hello world',
+  })
 })
 
 // mongoose.connect(
