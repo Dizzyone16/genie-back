@@ -79,6 +79,7 @@ function generate_sus_val() {
 }
 
 async function crawlNaverLowestPriceSearch(query) {
+  console.log('query here: ', query)
   const crawledData = []
 
   try {
@@ -107,6 +108,7 @@ async function crawlNaverLowestPriceSearch(query) {
     })
 
     if (response.status === 200) {
+      console.log('response 200')
       const $ = cheerio.load(response.data)
 
       const scriptData = $('script#__NEXT_DATA__').html()
@@ -173,6 +175,7 @@ async function crawlNaverLowestPriceSearch(query) {
       return crawledData
     } else if (response.status === 401 && validateJSON(response.data)) {
       try {
+        console.log('response 401')
         const responseData = JSON.parse(response.data)
         if (
           'message' in responseData &&
@@ -296,6 +299,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
 class SerachService {
   async crawlProductData(query) {
     try {
+      console.log('query exist: ', query)
       const result = await crawlNaverLowestPriceSearch(query)
       if (result.length > 0) {
         return result
