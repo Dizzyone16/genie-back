@@ -320,6 +320,7 @@ class SerachService {
   }
 
   async searchProducts(query) {
+    console.log('service received')
     const existingData = await ProductSearchRepo.getProductData(query)
     if (existingData) {
       return existingData
