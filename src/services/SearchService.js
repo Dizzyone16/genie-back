@@ -113,6 +113,7 @@ async function crawlNaverLowestPriceSearch(query) {
 
       const scriptData = $('script#__NEXT_DATA__').html()
       if (scriptData) {
+        console.log('script data exist')
         const parsedData = JSON.parse(scriptData)
 
         const productCards = $('div.product_list_item__b84TO')
@@ -172,6 +173,7 @@ async function crawlNaverLowestPriceSearch(query) {
           })
         })
       }
+      console.log('no script data')
 
       return crawledData
     } else if (response.status === 401 && validateJSON(response.data)) {
