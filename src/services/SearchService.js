@@ -78,22 +78,6 @@ function generate_sus_val() {
   return x
 }
 
-async function getRedirectUrl(url) {
-  try {
-    const a = new Date()
-    const response = await SCRAPINGBEE_CLIENT.get({
-      url,
-    })
-    const b = new Date()
-    console.log(`scrapingbee time: ${b - a}`)
-    const redirectUrl = response.headers?.['spb-resolved-url']
-    console.log(response?.status, redirectUrl, `scrapingbee time: ${b - a}`)
-    return redirectUrl
-  } catch (error) {
-    console.error(error)
-  }
-}
-
 async function crawlNaverLowestPriceSearch(query) {
   const crawledData = []
 
@@ -116,9 +100,8 @@ async function crawlNaverLowestPriceSearch(query) {
       query
     )}`
 
-    const redirctionUrl = await getRedirectUrl(url)
-
-    const response = await axios.get(redirctionUrl, {
+    const response = await SCRAPINGBEE_CLIENT.get({
+      url,
       params: { render_js: 'False', timeout: '10000' },
       headers,
       cookies,
