@@ -11,15 +11,11 @@ const UserController = require('../controllers/userController')
 
 const router = express.Router()
 
-router.post(
-  '/login-or-register',
-  // auth,
-  wrapAsync(UserController.loginOrRegister)
-)
+router.post('/login-or-register', wrapAsync(UserController.loginOrRegister))
 
 router.post(
   '/search',
-  // auth,
+  auth,
   wrapAsync(async (req, res) => {
     const searchQuery = req.body.query
     const result = await SearchService.searchProducts(searchQuery)
@@ -40,7 +36,7 @@ router.post(
 
 router.post(
   '/catalog',
-  // auth,
+  auth,
   wrapAsync(async (req, res) => {
     const catalogNumber = req.body.catalogNumber
 
