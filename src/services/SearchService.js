@@ -323,9 +323,12 @@ class SerachService {
     console.log('service received')
     const existingData = await ProductSearchRepo.getProductData(query)
     if (existingData) {
+      console.log('data existed')
       return existingData
     } else {
+      console.log('data unexisted')
       const crawledData = await this.crawlProductData(query)
+      console.log(crawledData, 'data crawled')
 
       ProductSearchRepo.registerProductData(crawledData)
       return crawledData
