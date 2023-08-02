@@ -7,7 +7,7 @@ const randomstring = require('randomstring')
 const ProductSearchRepo = require('../repositories/ProductSearchRepo')
 const CatalogSearchRepo = require('../repositories/CatalogSearchRepo')
 
-const SCRAPINGBEE_CLINET = new scrapingbee.ScrapingBeeClient(
+const SCRAPINGBEE_CLIENT = new scrapingbee.ScrapingBeeClient(
   'T30TVYLUK7TOWGTJ1F22XO828RCMHXVA91QDFZRJTYX1R174ZMAMVZUCM7H9PWRL8BP1ZOFCPL3RMGRB'
 )
 
@@ -78,6 +78,22 @@ function generate_sus_val() {
   return x
 }
 
+async function getRedirectUrl(url) {
+  try {
+    const a = new Date()
+    const response = await SCRAPINGBEE_CLIENT.get({
+      url,
+    })
+    const b = new Date()
+    console.log(`scrapingbee time: ${b - a}`)
+    const redirectUrl = response.headers?.['spb-resolved-url']
+    console.log(response?.status, redirectUrl, `scrapingbee time: ${b - a}`)
+    return redirectUrl
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 async function crawlNaverLowestPriceSearch(query) {
   console.log('query here: ', query)
   const crawledData = []
@@ -101,7 +117,9 @@ async function crawlNaverLowestPriceSearch(query) {
       query
     )}`
 
-    const response = await axios.get(url, {
+    const redirctionUrl = await getRedirectUrl(url)
+
+    const response = await axios.get(redirctionUrl, {
       params: { render_js: 'False', timeout: '10000' },
       headers,
       cookies,
