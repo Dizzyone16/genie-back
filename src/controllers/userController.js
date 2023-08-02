@@ -28,10 +28,9 @@ const UserController = {
         const accessToken = generateJwtToken(userId)
         return res.status(200).json({ token: accessToken, userId: userId })
       } else {
-        const registeredUser = await UserRepo.registerUser(phoneNumber)
-        const userId = registeredUser.insertedId
-        const accessToken = generateJwtToken(userId)
-        return res.status(200).json({ token: accessToken, userId: userId })
+        const newUserId = await UserRepo.registerUser(phoneNumber)
+        const accessToken = generateJwtToken(newUserId)
+        return res.status(200).json({ token: accessToken, userId: newUserId })
       }
     } catch (err) {
       console.error('Error registering user:', err)

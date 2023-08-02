@@ -6,10 +6,11 @@ const hour = 1000 * 60 * 60 * 60
 const day = 1000 * 60 * 60 * 60 * 24
 
 class ProductSearchRepo {
-  async registerProductData(data) {
+  async registerProductData(query, crawledData) {
     const { db } = client
     await db.collection('product_search').insertOne({
-      ...data,
+      productName: query,
+      crawledData: crawledData,
       createdAt: new Date(),
     })
   }
@@ -18,7 +19,7 @@ class ProductSearchRepo {
     const { db } = client
     const result = await db.collection('product_search').findOne({
       productName: query,
-      createdAt: { $gte: new Date() - hour },
+      createdAt: { $gte: new Date(new Date().getTime() - hour) },
       deletedAt: null,
     })
     return result

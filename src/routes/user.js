@@ -22,7 +22,6 @@ router.post(
   // auth,
   wrapAsync(async (req, res) => {
     const searchQuery = req.body.query
-    console.log('start')
     const result = await SearchService.searchProducts(searchQuery)
 
     if (result) {

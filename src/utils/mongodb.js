@@ -19,9 +19,4 @@ client.client.then((result) => {
   console.log(`Mongo DB connected`)
 })
 
-client.client.then((result) => {
-  const { db } = client
-  db.collection('user').insertOne({ phoneNumber: '01066342670' })
-})
-
 module.exports = client

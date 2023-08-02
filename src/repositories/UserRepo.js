@@ -6,10 +6,10 @@ const hour = 1000 * 60 * 60 * 60
 const day = 1000 * 60 * 60 * 60 * 24
 
 class UserRepo {
-  async registerUser(userInfo) {
+  async registerUser(phoneNumber) {
     const { db } = client
     const result = await db.collection('user').insertOne({
-      ...userInfo,
+      phoneNumber: phoneNumber,
       createdAt: new Date(),
     })
     return result.insertedId
@@ -19,7 +19,8 @@ class UserRepo {
     const { db } = client
     const result = await db.collection('user').findOne(
       {
-        phoneNumber,
+        phoneNumber: phoneNumber,
+        deletedAt: null,
       },
       {
         projection: { phoneNumber: 1 },

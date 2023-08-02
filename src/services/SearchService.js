@@ -95,7 +95,6 @@ async function getRedirectUrl(url) {
 }
 
 async function crawlNaverLowestPriceSearch(query) {
-  console.log('query here: ', query)
   const crawledData = []
 
   try {
@@ -126,13 +125,10 @@ async function crawlNaverLowestPriceSearch(query) {
     })
 
     if (response.status === 200) {
-      console.log('response 200', response.data)
       const $ = cheerio.load(response.data)
-      console.log('$', $)
 
       const scriptData = $('script#__NEXT_DATA__').html()
       if (scriptData) {
-        console.log('script data exist')
         const parsedData = JSON.parse(scriptData)
 
         const productCards = $('div.product_list_item__b84TO')
@@ -144,22 +140,30 @@ async function crawlNaverLowestPriceSearch(query) {
             const sellerCountText = catalogCard
               .find('span.product_count__C1gbp')
               .text()
-            // const ratingCount = $(productCard).find('em').text().trim()
-            // console.log(ratingCount, 'ratingCount')
+            const isBrandCatalog = $(productCard)
+              .find('.product_brand_store__uyphw')
+              .text()
+            const ratingCount = $(productCard)
+              .find('div.product_info_count__PSSO1 em')
+              .text()
+              .replace(/,/g, '')
             const sellerCount = parseInt(sellerCountText.replace(/\D/g, ''), 10)
-            // && ratingCount >= 100
-            if (sellerCount >= 100) {
+
+            if (sellerCount >= 100 || isBrandCatalog || ratingCount > 1000) {
               catalogCards.push(productCard)
             }
           }
         })
 
         catalogCards.forEach((catalogCard) => {
-          const title = $(catalogCard)
+          const orgTitle = $(catalogCard)
             .find('span.product_info_tit__c5_pb')
             .text()
             .trim()
-          console.log('title', title)
+          const quantity = $(catalogCard)
+            .find('.expandList_info_sub_list__rjNJf dl dt')
+            .first()
+            .text()
           const url = $(catalogCard)
             .find('a.product_info_main__piyRs')
             .attr('href')
@@ -180,6 +184,16 @@ async function crawlNaverLowestPriceSearch(query) {
           const rating_tag = $(catalogCard).find('.product_grade__qkI47 strong')
           const ratingScore = rating_tag.length > 0 ? rating_tag.text() : 0
           const ratingCount = $(catalogCard).find('em').text().trim()
+          const sellerCount = $(catalogCard)
+            .find('.product_count__C1gbp')
+            .text()
+
+          let title
+          if (quantity && quantity.includes('개')) {
+            title = orgTitle + quantity
+          } else {
+            title = orgTitle
+          }
 
           crawledData.push({
             title,
@@ -189,15 +203,14 @@ async function crawlNaverLowestPriceSearch(query) {
             catalogNumber,
             ratingScore,
             ratingCount,
+            sellerCount,
           })
         })
       }
-      console.log('no script data')
 
       return crawledData
     } else if (response.status === 401 && validateJSON(response.data)) {
       try {
-        console.log('response 401')
         const responseData = JSON.parse(response.data)
         if (
           'message' in responseData &&
@@ -245,6 +258,10 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
       const image_tag = $('div.simpleTop_thumb_area__byBd0')
       const price_tag = $('.priceArea_price__pZ_yN')
+      const quantity_tag = $(
+        'button.productFilter_btn_product__Smi9N[aria-checked="true"]'
+      )
+
       const mall_list_tag = $(
         'ul.productPerMalls_sell_list_area__IozKN.price_active'
       )
@@ -280,6 +297,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
         })
 
       const title = $('h2.topInfo_title__nZW6V').text().trim()
+      const quantity = quantity_tag.find('.productFilter_count__cVKmo').text()
       const imageUrl = image_tag.find('img').attr('src')
       const lowestPrice = price_tag.find('em').text().trim()
       const lowestPriceUrl = $('.buyButton_link_buy__a_Zkc').attr('href')
@@ -287,7 +305,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
       const ratingCount = rating_count_text.replace(/\D+/g, '')
 
       const result = {
-        title: title,
+        title: title + ' ' + quantity,
         imageUrl: imageUrl,
         lowestPrice: lowestPrice,
         lowestPriceUrl: lowestPriceUrl,
@@ -321,7 +339,6 @@ async function crawlNaverProductCatalog(catalogNumber) {
 class SerachService {
   async crawlProductData(query) {
     try {
-      console.log('query exist: ', query)
       const result = await crawlNaverLowestPriceSearch(query)
       if (result.length > 0) {
         return result
@@ -346,17 +363,14 @@ class SerachService {
   }
 
   async searchProducts(query) {
-    console.log('service received')
     const existingData = await ProductSearchRepo.getProductData(query)
-    if (existingData) {
-      console.log('data existed')
-      return existingData
-    } else {
-      console.log('data unexisted')
-      const crawledData = await this.crawlProductData(query)
-      console.log(crawledData, 'data crawled')
 
-      ProductSearchRepo.registerProductData(crawledData)
+    if (existingData) {
+      return existingData?.crawledData
+    } else {
+      const crawledData = await this.crawlProductData(query)
+
+      ProductSearchRepo.registerProductData(query, crawledData)
       return crawledData
     }
   }
@@ -364,10 +378,10 @@ class SerachService {
   async getCatalogData(catalogNumber) {
     const existingData = await CatalogSearchRepo.getCatalogData(catalogNumber)
     if (existingData) {
-      return existingData
+      return existingData?.crawledData
     } else {
       const crawledData = await this.crawlCatalogData(catalogNumber)
-      CatalogSearchRepo.registerCatalogData(crawledData)
+      CatalogSearchRepo.registerCatalogData(catalogNumber, crawledData)
       return crawledData
     }
   }
