@@ -108,8 +108,9 @@ async function crawlNaverLowestPriceSearch(query) {
     })
 
     if (response.status === 200) {
-      console.log('response 200')
+      console.log('response 200', response.data)
       const $ = cheerio.load(response.data)
+      console.log('$', $)
 
       const scriptData = $('script#__NEXT_DATA__').html()
       if (scriptData) {
