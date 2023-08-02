@@ -139,6 +139,7 @@ async function crawlNaverLowestPriceSearch(query) {
             .find('span.product_info_tit__c5_pb')
             .text()
             .trim()
+          console.log('title', title)
           const url = $(catalogCard)
             .find('a.product_info_main__piyRs')
             .attr('href')
