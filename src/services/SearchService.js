@@ -173,7 +173,7 @@ async function crawlNaverLowestPriceSearch(query) {
 
           let title
           if (quantity && quantity.includes('개')) {
-            title = orgTitle + quantity
+            title = orgTitle + ' ' + quantity
           } else {
             title = orgTitle
           }
@@ -230,7 +230,8 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
     const url = `https://msearch.shopping.naver.com/catalog/${catalogNumber}?deliveryCharge=true`
 
-    const response = await axios.get(url, {
+    const response = await SCRAPINGBEE_CLIENT.get({
+      url,
       params: { render_js: 'False', timeout: '10000' },
       headers,
       cookies,

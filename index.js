@@ -19,7 +19,7 @@ const configs = require('./src/utils/configs.js')
 const app = express()
 
 const userRouter = require('./src/routes/user')
-const UserRepo = require('./src/repositories/UserRepo')
+const dataRouter = require('./src/routes/data')
 
 // app.use(helmet())
 
@@ -73,3 +73,4 @@ app.get('/', (req, res) => {
 
 // // 라우트 설정
 app.use('/user', userRouter)
+app.use('/data', dataRouter)

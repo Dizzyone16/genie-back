@@ -17,6 +17,7 @@ router.post(
   '/search',
   auth,
   wrapAsync(async (req, res) => {
+    console.log('data received')
     const searchQuery = req.body.query
     const result = await SearchService.searchProducts(searchQuery)
 
