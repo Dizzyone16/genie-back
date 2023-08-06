@@ -16,7 +16,7 @@ function generateJwtToken(userId) {
 const UserController = {
   async loginOrRegister(req, res) {
     try {
-      console.log('data received')
+      console.log('login data received')
       const { phoneNumber } = req.body
 
       // check whether registered
