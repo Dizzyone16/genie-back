@@ -59,6 +59,10 @@ app.get('/', (req, res) => {
   })
 })
 
+app.get('/health-check', (req, res) => {
+  return res.status(200)
+})
+
 // mongoose.connect(
 //   process.env.DB_CONNECT,
 //   {
