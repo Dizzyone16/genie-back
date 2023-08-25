@@ -271,12 +271,47 @@ async function crawlNaverProductCatalog(catalogNumber) {
       const quantity_tag = $(
         'button.productFilter_btn_product__Smi9N[aria-checked="true"]'
       )
-
       const mall_list_tag = $(
         'ul.productPerMalls_sell_list_area__IozKN.price_active'
       )
+      const option_tags = $('button.productFilter_btn_product__Smi9N')
       const rating_count_element = $('.topInfo_link_review__hLI0h')
       const rating_count_text = rating_count_element.text().trim()
+
+      const options = []
+
+      if (option_tags.length > 0) {
+        option_tags.each((index, button) => {
+          const quantity = $(button)
+            .find('.productFilter_count__cVKmo')
+            .text()
+            .trim()
+          const price = $(button)
+            .find('.productFilter_price__8hk_w')
+            .text()
+            .trim()
+          const unitPriceValue = $(button)
+            .find(
+              '.productFilter_unit_price__hG_U8 .productFilter_value__qkoOC strong'
+            )
+            .text()
+            .trim()
+          const unitPriceUnitRaw = $(button)
+            .find('.productFilter_unit_price__hG_U8')
+            .contents()
+            .not($(button).find('.productFilter_unit_price__hG_U8').children())
+            .text()
+            .trim()
+          const unitPriceUnit = unitPriceUnitRaw.replace(/\(|\)/g, '')
+          const unitPrice = unitPriceUnit + ' ' + unitPriceValue + '원'
+
+          options?.push({
+            quantity: quantity,
+            price: price,
+            unitPrice: unitPrice,
+          })
+        })
+      }
 
       const mall_list = []
 
@@ -326,6 +361,10 @@ async function crawlNaverProductCatalog(catalogNumber) {
         ratingCount: ratingCount,
       }
 
+      if (options.length > 0) {
+        result.options = options
+      }
+
       return result
     } else if (response.status === 401 && validateJSON(response.data)) {
       try {
@@ -343,7 +382,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
     return null
   } catch (error) {
-    console.error('Naver exception:', error, query)
+    console.error('Naver exception:', error, catalogNumber)
     return null
   }
 }
