@@ -78,6 +78,37 @@ function generate_sus_val() {
   return x
 }
 
+function processTitle(orgTitle, quantity) {
+  let title = orgTitle
+
+  if (title.includes('제주삼다수') || title.includes('제주 삼다수')) {
+    title = title.replace('제주삼다수', '삼다수')
+    title = title.replace('제주 삼다수', '삼다수')
+  }
+
+  if (title.includes('무라벨') && title.includes('그린')) {
+    title = title.replace('그린', '')
+  }
+
+  title = title.replace('제주특별자치도개발공사', '')
+
+  if (quantity && quantity !== '1개' && quantity.includes('개')) {
+    title = title + ' ' + quantity
+  }
+
+  // 중간에 연속된 공백을 하나로 줄이기
+  title = title.replace(/\s+/g, ' ')
+
+  // '삼다수' 문자열이 2개 이상인 경우 하나만 남기기
+  while ((title.match(/삼다수/g) || []).length > 1) {
+    title = title.replace('삼다수', '').trim()
+  }
+
+  title = title.trim()
+
+  return title
+}
+
 async function crawlNaverLowestPriceSearch(query) {
   const crawledData = []
 
@@ -171,12 +202,7 @@ async function crawlNaverLowestPriceSearch(query) {
             .find('.product_count__C1gbp')
             .text()
 
-          let title
-          if (quantity && quantity.includes('개')) {
-            title = orgTitle + ' ' + quantity
-          } else {
-            title = orgTitle
-          }
+          let title = processTitle(orgTitle, quantity)
 
           crawledData.push({
             title,
@@ -280,7 +306,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
           })
         })
 
-      const title = $('h2.topInfo_title__nZW6V').text().trim()
+      const orgTitle = $('h2.topInfo_title__nZW6V').text().trim()
       const quantity = quantity_tag.find('.productFilter_count__cVKmo').text()
       const imageUrl = image_tag.find('img').attr('src')
       const lowestPrice = price_tag.find('em').text().trim()
@@ -288,8 +314,10 @@ async function crawlNaverProductCatalog(catalogNumber) {
       const ratingScore = $('.statistics_value__qyFPi').text().trim()
       const ratingCount = rating_count_text.replace(/\D+/g, '')
 
+      let title = processTitle(orgTitle, quantity)
+
       const result = {
-        title: title + ' ' + quantity,
+        title: title,
         imageUrl: imageUrl,
         lowestPrice: lowestPrice,
         lowestPriceUrl: lowestPriceUrl,
