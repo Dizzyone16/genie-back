@@ -20,6 +20,8 @@ const app = express()
 
 const userRouter = require('./src/routes/user')
 const dataRouter = require('./src/routes/data')
+const webRouter = require('./src/routes/web')
+const { v4: uuidv4 } = require('uuid')
 
 // app.use(helmet())
 
@@ -59,6 +61,24 @@ app.get('/', (req, res) => {
   })
 })
 
+app.get('/web', (req, res) => {
+  let userId = req.cookies.user_id
+
+  if (!userId) {
+    userId = uuidv4()
+    res.cookie('user_id', userId, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: false,
+    })
+    console.log(`User with ID ${userId} visited the homepage.`)
+  } else {
+    console.log(`User with ID ${userId} is a returning visitor.`)
+  }
+
+  res.send('Welcome!')
+})
+
 app.get('/health-check', (req, res) => {
   return res.status(200).json({
     message: 'Hello world',
@@ -80,3 +100,4 @@ app.get('/health-check', (req, res) => {
 // // 라우트 설정
 app.use('/user', userRouter)
 app.use('/data', dataRouter)
+app.use('/web', webRouter)

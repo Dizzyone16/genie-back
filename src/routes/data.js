@@ -19,6 +19,7 @@ router.post(
     const userId = req?.user?.id
     console.log(eventType, eventData, 'event')
     console.log(userId, 'userId')
+
     const eventInfo = { ...eventData, userId }
 
     await EventsRepo.logEvent(eventType, eventInfo)

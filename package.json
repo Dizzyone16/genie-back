@@ -26,7 +26,8 @@
     "morgan": "^1.10.0",
     "nodemon": "^3.0.1",
     "randomstring": "^1.3.0",
-    "scrapingbee": "^1.7.4"
+    "scrapingbee": "^1.7.4",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "eslint": "^8.45.0",

@@ -3,6 +3,7 @@ const configs = require('../utils/configs')
 
 // middlewares
 const jwt = require('jsonwebtoken')
+const { v4: uuidv4 } = require('uuid')
 
 //repos
 const UserRepo = require('../repositories/UserRepo')
@@ -35,6 +36,20 @@ const UserController = {
       }
     } catch (err) {
       console.error('Error registering user:', err)
+      res.status(500).json({ message: 'Internal server error.' })
+    }
+  },
+
+  async issueWebToken(req, res) {
+    try {
+      const uniqueWebVisitorId = uuidv4()
+      const accessToken = generateJwtToken(uniqueWebVisitorId)
+      console.log(`Token issued for web visitor with ID: ${uniqueWebVisitorId}`)
+      return res
+        .status(200)
+        .json({ token: accessToken, userId: uniqueWebVisitorId })
+    } catch (err) {
+      console.error('Error issuing web token:', err)
       res.status(500).json({ message: 'Internal server error.' })
     }
   },

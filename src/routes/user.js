@@ -13,6 +13,8 @@ const router = express.Router()
 
 router.post('/login-or-register', wrapAsync(UserController.loginOrRegister))
 
+router.get('/issue-web-token', wrapAsync(UserController.issueWebToken))
+
 router.post(
   '/search',
   auth,
@@ -53,6 +55,31 @@ router.post(
     return res.json({
       status: 404,
       message: 'Catalog search failed.',
+    })
+  })
+)
+
+router.post(
+  '/catalog/option',
+  auth,
+  wrapAsync(async (req, res) => {
+    const { catalogNumber, optionNumber } = req?.body
+
+    const result = await SearchService.getCatalogOptionData(
+      catalogNumber,
+      optionNumber
+    )
+
+    if (result) {
+      return res.json({
+        status: 200,
+        data: result,
+        message: 'Catalog option search completed successfully.',
+      })
+    }
+    return res.json({
+      status: 404,
+      message: 'Catalog option search failed.',
     })
   })
 )

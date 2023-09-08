@@ -10,9 +10,33 @@ class CatalogSearchRepo {
     const { db } = client
     await db.collection('catalog_search').insertOne({
       productNumber: productNumber,
-      crawledData: crawledData,
+      crawledData: { ...crawledData, crawledAt: new Date() },
       createdAt: new Date(),
     })
+  }
+
+  async registerCatalogOptionData(
+    productNumber,
+    optionNumber,
+    crawledOptionData
+  ) {
+    const setOperation = {}
+
+    for (const [key, value] of Object.entries(crawledOptionData)) {
+      setOperation[`crawledData.options.$.${key}`] = value
+    }
+
+    const { db } = client
+    await db.collection('catalog_search').updateOne(
+      {
+        productNumber: productNumber,
+        createdAt: { $gte: new Date(new Date().getTime() - hour) },
+        'crawledData.options.optionNumber': optionNumber,
+      },
+      {
+        $set: setOperation,
+      }
+    )
   }
 
   async deleteAll() {
@@ -29,6 +53,34 @@ class CatalogSearchRepo {
       createdAt: { $gte: new Date(new Date().getTime() - hour) },
       deletedAt: null,
     })
+    return result
+  }
+
+  async getCatalogOptionData(productNumber, optionNumber) {
+    const { db } = client
+    const query = {
+      productNumber: productNumber,
+      [`crawledData.options.optionNumber`]: optionNumber,
+      createdAt: { $gte: new Date(new Date().getTime() - hour) },
+      deletedAt: null,
+    }
+
+    const result = await db.collection('catalog_search').findOne(query)
+
+    if (
+      result &&
+      result?.crawledData &&
+      Array.isArray(result?.crawledData.options)
+    ) {
+      const specificOption = result?.crawledData?.options.find(
+        (opt) => opt?.optionNumber === optionNumber
+      )
+
+      if (specificOption) {
+        return specificOption?.mallList ? specificOption : null
+      }
+    }
+
     return result
   }
 }
