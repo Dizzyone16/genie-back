@@ -92,7 +92,7 @@ function processTitle(orgTitle, quantity) {
 
   title = title.replace('제주특별자치도개발공사', '')
 
-  if (quantity && quantity !== '1개' && quantity.includes('개')) {
+  if (quantity && quantity.includes('개')) {
     title = title + ' ' + quantity
   }
 
@@ -178,6 +178,7 @@ async function crawlNaverLowestPriceSearch(query) {
             .find('.expandList_info_sub_list__rjNJf dl dt')
             .first()
             .text()
+            .trim()
           const url = $(catalogCard)
             .find('a.product_info_main__piyRs')
             .attr('href')
@@ -282,10 +283,14 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
       if (option_tags.length > 0) {
         option_tags.each((index, button) => {
-          const quantity = $(button)
-            .find('.productFilter_count__cVKmo')
+          let quantity
+          quantity = $(button).find('.productFilter_count__cVKmo').text().trim()
+
+          quantity = $(button)
+            .find('.productFilter_product_title__uTJ8a')
             .text()
             .trim()
+
           const price = $(button)
             .find('.productFilter_price__8hk_w')
             .text()
@@ -303,7 +308,10 @@ async function crawlNaverProductCatalog(catalogNumber) {
             .text()
             .trim()
           const unitPriceUnit = unitPriceUnitRaw.replace(/\(|\)/g, '')
-          const unitPrice = unitPriceUnit + ' ' + unitPriceValue + '원'
+          const unitPrice =
+            unitPriceUnit && unitPriceValue
+              ? unitPriceUnit + ' ' + unitPriceValue + '원'
+              : null
 
           const dataNclick = $(button).attr('data-nclick')
           const optionNumberMatch = dataNclick.match(/i:(\d+)/)
@@ -364,7 +372,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
         checkedOption = {
           quantity: checkedQuantity,
           price: checkedPrice,
-          optionNumber: checkedOptionNumber, // Added optionNumber field
+          optionNumber: checkedOptionNumber,
         }
       }
 
