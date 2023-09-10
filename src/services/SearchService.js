@@ -305,10 +305,15 @@ async function crawlNaverProductCatalog(catalogNumber) {
           const unitPriceUnit = unitPriceUnitRaw.replace(/\(|\)/g, '')
           const unitPrice = unitPriceUnit + ' ' + unitPriceValue + '원'
 
+          const dataNclick = $(button).attr('data-nclick')
+          const optionNumberMatch = dataNclick.match(/i:(\d+)/)
+          const optionNumber = optionNumberMatch ? optionNumberMatch[1] : null
+
           options?.push({
             quantity: quantity,
             price: price,
             unitPrice: unitPrice,
+            optionNumber: optionNumber,
           })
         })
       }
@@ -341,6 +346,28 @@ async function crawlNaverProductCatalog(catalogNumber) {
           })
         })
 
+      let checkedOption = null
+      if (quantity_tag.length > 0) {
+        const checkedQuantity = quantity_tag
+          .find('.productFilter_count__cVKmo')
+          .text()
+        const checkedPrice = quantity_tag
+          .find('.productFilter_price__8hk_w')
+          .text()
+          .trim()
+        const checkedDataNclick = quantity_tag.attr('data-nclick')
+        const checkedOptionNumberMatch = checkedDataNclick.match(/i:(\d+)/)
+        const checkedOptionNumber = checkedOptionNumberMatch
+          ? checkedOptionNumberMatch[1]
+          : null
+
+        checkedOption = {
+          quantity: checkedQuantity,
+          price: checkedPrice,
+          optionNumber: checkedOptionNumber, // Added optionNumber field
+        }
+      }
+
       const orgTitle = $('h2.topInfo_title__nZW6V').text().trim()
       const quantity = quantity_tag.find('.productFilter_count__cVKmo').text()
       const imageUrl = image_tag.find('img').attr('src')
@@ -363,6 +390,136 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
       if (options.length > 0) {
         result.options = options
+      }
+
+      if (checkedOption) {
+        result.checkedOption = checkedOption // Added checkedOption object
+      }
+
+      return result
+    } else if (response.status === 401 && validateJSON(response.data)) {
+      try {
+        const responseData = JSON.parse(response.data)
+        if (
+          'message' in responseData &&
+          responseData.message.includes('limit')
+        ) {
+          return null
+        }
+      } catch (e) {
+        console.log('response 401 error', e)
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error('Naver exception:', error, catalogNumber)
+    return null
+  }
+}
+
+async function crawlNaverProductCatalogByOption(catalogNumber, optionNumber) {
+  try {
+    const headers = {
+      referer: `https://m.search.naver.com/search.naver?sm=mtp_hty.top&where=m&query=${encodeURIComponent(
+        catalogNumber
+      )}`,
+    }
+
+    const cookies = {
+      NFS: '2',
+      NNB: generate_nnb(),
+      page_uid: generate_page_uid(),
+      _naver_usersession_: generate_naver_usersession(),
+      sus_val: generate_sus_val(),
+    }
+
+    const url = `https://msearch.shopping.naver.com/catalog/${catalogNumber}?deliveryCharge=true&purchaseConditionSequence=${optionNumber}`
+
+    const response = await SCRAPINGBEE_CLIENT.post({
+      url,
+      params: { render_js: 'False', timeout: '10000' },
+      headers,
+      cookies,
+    })
+
+    if (response.status === 200) {
+      const $ = cheerio.load(response.data)
+
+      const quantity_tag = $(
+        'button.productFilter_btn_product__Smi9N[aria-checked="true"]'
+      )
+      const mall_list_tag = $(
+        'ul.productPerMalls_sell_list_area__IozKN.price_active'
+      )
+
+      const mall_list = []
+
+      mall_list_tag
+        .find('li.productPerMall_seller_item__S11aV')
+        .each((index, li) => {
+          const seller_name = $(li)
+            .find(
+              '.productPerMall_info_title__CJMxe .productPerMall_mall__FSTiv'
+            )
+            .text()
+            .trim()
+          const price = $(li)
+            .find(
+              '.productPerMall_info_right__mJk9G .productPerMall_info_price__CB_kb .productPerMall_price__1u_8d em'
+            )
+            .text()
+            .trim()
+          const mall_url = $(li)
+            .find('.productPerMall_link_seller__K8_B_.linkAnchor')
+            .attr('href')
+
+          mall_list.push({
+            sellerName: seller_name,
+            price: price,
+            mallUrl: mall_url,
+          })
+        })
+
+      let checkedOption = null
+      if (quantity_tag.length > 0) {
+        const checkedQuantity = quantity_tag
+          .find('.productFilter_count__cVKmo')
+          .text()
+        const checkedPrice = quantity_tag
+          .find('.productFilter_price__8hk_w')
+          .text()
+          .trim()
+        const checkedDataNclick = quantity_tag.attr('data-nclick')
+        const checkedOptionNumberMatch = checkedDataNclick.match(/i:(\d+)/)
+        const checkedOptionNumber = checkedOptionNumberMatch
+          ? checkedOptionNumberMatch[1]
+          : null
+
+        checkedOption = {
+          quantity: checkedQuantity,
+          price: checkedPrice,
+          optionNumber: checkedOptionNumber, // Added optionNumber field
+        }
+      }
+
+      const orgTitle = $('h2.topInfo_title__nZW6V').text().trim()
+      const quantity = quantity_tag.find('.productFilter_count__cVKmo').text()
+      const lowestPrice = mall_list[0]?.price
+      const lowestPriceUrl = mall_list[0]?.mallUrl
+
+      let title = processTitle(orgTitle, quantity)
+
+      const result = {
+        title: title,
+        quantity: quantity,
+        lowestPrice: lowestPrice,
+        lowestPriceUrl: lowestPriceUrl,
+        mallList: mall_list,
+      }
+
+      if (checkedOption) {
+        result.checkedOption = checkedOption // Added checkedOption object
       }
 
       return result
@@ -413,6 +570,19 @@ class SerachService {
     }
   }
 
+  async crawlCatalogOptionData(catalogNumber, optionNumber) {
+    try {
+      const result = await crawlNaverProductCatalogByOption(
+        catalogNumber,
+        optionNumber
+      )
+      return result
+    } catch (error) {
+      console.error('Error:', error.message)
+      throw error
+    }
+  }
+
   async searchProducts(query) {
     const existingData = await ProductSearchRepo.getProductData(query)
 
@@ -434,6 +604,28 @@ class SerachService {
       const crawledData = await this.crawlCatalogData(catalogNumber)
       CatalogSearchRepo.registerCatalogData(catalogNumber, crawledData)
       return crawledData
+    }
+  }
+
+  async getCatalogOptionData(catalogNumber, optionNumber) {
+    const existingData = await CatalogSearchRepo.getCatalogOptionData(
+      catalogNumber,
+      optionNumber
+    )
+
+    if (existingData) {
+      return existingData
+    } else {
+      const crawledOptionData = await this.crawlCatalogOptionData(
+        catalogNumber,
+        optionNumber
+      )
+      CatalogSearchRepo.registerCatalogOptionData(
+        catalogNumber,
+        optionNumber,
+        crawledOptionData
+      )
+      return crawledOptionData
     }
   }
 }
