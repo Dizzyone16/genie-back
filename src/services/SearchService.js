@@ -283,14 +283,7 @@ async function crawlNaverProductCatalog(catalogNumber) {
 
       if (option_tags.length > 0) {
         option_tags.each((index, button) => {
-          let quantity
-          quantity = $(button).find('.productFilter_count__cVKmo').text().trim()
-
-          quantity = $(button)
-            .find('.productFilter_product_title__uTJ8a')
-            .text()
-            .trim()
-
+          const quantity = $(button).find('span').first().text().trim()
           const price = $(button)
             .find('.productFilter_price__8hk_w')
             .text()
