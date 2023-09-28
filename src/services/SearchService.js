@@ -179,8 +179,9 @@ async function crawlNaverLowestPriceSearch(query) {
             .first()
             .text()
             .trim()
+
           const url = $(catalogCard)
-            .find('a.product_info_main__piyRs')
+            .find('a.product_btn_link__ArGCa')
             .attr('href')
           const imageUrl = $(catalogCard)
             .find('span.product_img_area__1aA4L img')
@@ -193,7 +194,7 @@ async function crawlNaverLowestPriceSearch(query) {
               ? lowest_price_tag.text().replace(/\D/g, '')
               : null
           const catalogNumber = $(catalogCard)
-            .find('a.product_info_main__piyRs')
+            .find('a.product_btn_link__ArGCa')
             .attr('data-i')
             .slice(0, 11)
           const rating_tag = $(catalogCard).find('.product_grade__qkI47 strong')
